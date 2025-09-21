@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" href="icone.ico" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <title>Menu Principal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .menu {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 800px;
+    }
+
+    .menu a {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 18px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #e63946, #d62828);
+      color: white;
+      transition: transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .menu a:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    .menu a i {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <a href="agendamento.html">
+      <i class="fa-solid fa-user-plus"></i>
+      Agendar
+    </a>
+    <a href="agendamentos.html">
+      <i class="fa-solid fa-user"></i>
+      Agendamentos
+    </a>
+    <a href="financeiro.html">
+      <i class="fa-solid fa-money-bill-wave"></i>
+      Financeiro
+    </a>
+  </div>
+</body>
+</html>

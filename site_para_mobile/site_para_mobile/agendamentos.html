@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamentos</title>
+  <link rel="icon" href="icone.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #e63946;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #e63946;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      background-color: #2a2a2a;
+    }
+
+    .card.selecionado {
+      background-color: #e63946;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .card-content p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    .botoes {
+      margin-top: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .botoes button {
+      padding: 15px;
+      background-color: #e63946;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .botoes button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #e63946;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fa-solid fa-calendar-days"></i> Agendamentos</h1>
+
+  <!-- Lista em Cards -->
+  <div id="listaAgendamentos" class="cards-container"></div>
+
+  <!-- Botões -->
+  <div class="botoes">
+    <button id="btnEditar" disabled><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+    <button id="btnWhatsApp" disabled><i class="fa-brands fa-whatsapp"></i> Mandar WhatsApp</button>
+    <button id="btnExcluir" disabled><i class="fa-solid fa-trash"></i> Excluir</button>
+  </div>
+
+  <a href="index.html" class="back-link">⬅ Voltar ao Menu</a>
+
+<script>
+  let selecionado = null;
+
+  // 🔹 Carregar agendamentos do localStorage
+  function carregarAgendamentos() {
+    let lista = document.getElementById("listaAgendamentos");
+    lista.innerHTML = "";
+
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+    // ordenar por data
+    agendamentos.sort((a, b) => {
+      const [diaA, mesA, anoA] = a.data.split("/").map(Number);
+      const [diaB, mesB, anoB] = b.data.split("/").map(Number);
+      return new Date(anoA, mesA - 1, diaA) - new Date(anoB, mesB - 1, diaB);
+    });
+
+    agendamentos.forEach((ag, index) => {
+      const doc = ag.documento || ag.cpf || ag.cnpj || "";
+
+      let card = document.createElement("div");
+      card.className = "card";
+      card.dataset.index = index;
+      card.innerHTML = `
+        <div class="card-header">
+          <strong>${ag.nome}</strong>
+          <span><i class="fa-solid fa-calendar-day"></i> ${ag.data}</span>
+        </div>
+        <div class="card-content">
+          <p><i class="fa-solid fa-briefcase"></i> Serviço: ${ag.servico}</p>
+          <p><i class="fa-solid fa-envelope"></i> Email: ${ag.email || "-"}</p>
+          <p><i class="fa-solid fa-id-card"></i> Documento: ${doc}</p>
+          <p><i class="fa-solid fa-phone"></i> Telefone: ${ag.telefone || "-"}</p>
+        </div>
+      `;
+      card.onclick = () => selecionar(card);
+      lista.appendChild(card);
+    });
+  }
+
+  // 🔹 Selecionar card
+  function selecionar(card) {
+    document.querySelectorAll(".card").forEach(el => el.classList.remove("selecionado"));
+    card.classList.add("selecionado");
+    selecionado = card.dataset.index;
+    document.querySelectorAll(".botoes button").forEach(btn => btn.disabled = false);
+  }
+
+  // 🔹 Editar
+  document.getElementById("btnEditar").addEventListener("click", () => {
+    if (selecionado === null) return;
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    let ag = agendamentos[selecionado];
+
+    let novoNome = prompt("Editar nome:", ag.nome);
+    let novoServico = prompt("Editar serviço:", ag.servico);
+    let novaData = prompt("Editar data (dd/mm/yyyy):", ag.data);
+    if (novaData && !/^([0-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}$/.test(novaData)) {
+      alert("Data inválida! Use o formato dd/mm/aaaa.");
+      return;
+    }
+    let novoEmail = prompt("Editar email:", ag.email);
+    if (novoEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novoEmail)) {
+      alert("E-mail inválido!");
+      return;
+    }
+    let novoDocumento = prompt("Editar documento (somente números):", ag.documento);
+    if (novoDocumento && !/^\d+$/.test(novoDocumento)) {
+      alert("Documento inválido!");
+      return;
+    }
+
+    if (novoNome !== null) ag.nome = novoNome;
+    if (novoServico !== null) ag.servico = novoServico;
+    if (novaData !== null) ag.data = novaData;
+    if (novoEmail !== null) ag.email = novoEmail;
+    if (novoDocumento !== null) ag.documento = novoDocumento;
+
+    agendamentos[selecionado] = ag;
+    localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+    carregarAgendamentos();
+  });
+
+  // 🔹 Excluir
+  document.getElementById("btnExcluir").addEventListener("click", () => {
+    if (selecionado === null) return;
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    if (confirm("Deseja realmente excluir este agendamento?")) {
+      agendamentos.splice(selecionado, 1);
+      localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+      carregarAgendamentos();
+      selecionado = null;
+      document.querySelectorAll(".botoes button").forEach(btn => btn.disabled = true);
+    }
+  });
+
+  // 🔹 Saudação dinâmica
+  function getSaudacao() {
+    const hora = new Date().getHours();
+    if (hora < 12) return "Bom dia";
+    if (hora < 18) return "Boa tarde";
+    return "Boa noite";
+  }
+
+  // 🔹 WhatsApp
+  document.getElementById("btnWhatsApp").addEventListener("click", () => {
+    if (selecionado === null) return;
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    let ag = agendamentos[selecionado];
+    const saudacao = getSaudacao();
+    const msg = `${saudacao}, ${ag.nome}!\nEstamos entrando em contato para lembrá-lo do seu agendamento:\n\nData: ${ag.data}\nServiço: ${ag.servico}\n\nObrigado!`;
+    if (ag.telefone) {
+      const numero = ag.telefone.replace(/\D/g, "");
+      window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(msg)}`, "_blank");
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+    }
+  });
+
+  // carregar na abertura
+  window.onload = carregarAgendamentos;
+</script>
+</body>
+</html>

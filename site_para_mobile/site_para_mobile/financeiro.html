@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financeiro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" href="icone.ico" type="image/x-icon">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #e63946;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .card {
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #e63946;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      background-color: #2a2a2a;
+    }
+
+    .card.selecionado {
+      background-color: #e63946;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .status {
+      font-size: 20px;
+    }
+
+    .card-content p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    .botoes {
+      margin-top: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .botoes button {
+      padding: 15px;
+      background-color: #e63946;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .botoes button:disabled {
+      background-color: #555;
+      cursor: not-allowed;
+    }
+
+    .back-link {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #e63946;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fa-solid fa-file-invoice-dollar"></i> Financeiro</h1>
+
+  <!-- Lista em Cards -->
+  <div id="listaFinanceiro" class="cards-container"></div>
+
+  <!-- Botões -->
+  <div class="botoes">
+    <button id="btnValor" disabled><i class="fa-solid fa-coins"></i> Definir valor</button>
+    <button id="btnConfirmar" disabled><i class="fa-solid fa-check"></i> Confirmar pagamento</button>
+    <button id="btnCobrar" disabled><i class="fa-brands fa-whatsapp"></i> Cobrar clientes pendentes</button>
+  </div>
+
+  <a href="index.html" class="back-link">⬅ Voltar ao Menu</a>
+
+<script>
+  let selecionado = null;
+
+  // 🔹 Carregar dados do localStorage
+  function carregarFinanceiro() {
+    let listaFinanceiro = document.getElementById("listaFinanceiro");
+    listaFinanceiro.innerHTML = ""; 
+
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+    agendamentos.forEach((ag, index) => {
+      const doc = ag.documento
+        || (ag.cpf ? `${ag.cpf}` : (ag.cnpj ? `${ag.cnpj}` : ""));
+
+      let card = document.createElement("div");
+      card.className = "card";
+      card.dataset.index = index; 
+      card.innerHTML = `
+        <div class="card-header">
+          <strong>${ag.nome}</strong>
+          <span class="status" data-status="${ag.pago ? "pago" : "naoPago"}">
+            ${ag.pago ? "✅" : "❌"}
+          </span>
+        </div>
+        <div class="card-content">
+          <p><i class="fa-solid fa-briefcase"></i> Serviço: ${ag.servico}</p>
+          <p><i class="fa-solid fa-money-bill-wave"></i> Valor: ${ag.valor ? ("R$ " + parseFloat(ag.valor).toFixed(2)) : "-"}</p>
+          <p><i class="fa-solid fa-calendar-day"></i> Data: ${ag.data}</p>
+          <p><i class="fa-solid fa-id-card"></i> Doc: ${doc}</p>
+        </div>
+      `;
+      card.onclick = () => selecionar(card);
+      listaFinanceiro.appendChild(card);
+    });
+
+    document.getElementById("btnCobrar").disabled = agendamentos.filter(ag => !ag.pago).length === 0;
+  }
+
+  // 🔹 Seleção de cliente
+  function selecionar(elemento) {
+    document.querySelectorAll(".card").forEach(el => el.classList.remove("selecionado"));
+    elemento.classList.add("selecionado");
+    selecionado = elemento;
+
+    let index = selecionado.dataset.index;
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+    document.getElementById("btnValor").disabled = !!agendamentos[index].valor;
+    let valor = agendamentos[index].valor;
+    document.getElementById("btnConfirmar").disabled = !(valor && valor !== "");
+  }
+
+  // 🔹 Definir valor
+  document.getElementById("btnValor").addEventListener("click", () => {
+    if (!selecionado) return;
+    let index = selecionado.dataset.index;
+
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    if (agendamentos[index].valor) {
+      alert("O valor já foi definido e não pode ser alterado!");
+      return;
+    }
+
+    let novoValor = prompt("Digite o valor do serviço:");
+    if (novoValor && !isNaN(novoValor)) {
+      agendamentos[index].valor = novoValor;
+      localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+      carregarFinanceiro();
+    }
+  });
+
+  // 🔹 Confirmar pagamento
+  document.getElementById("btnConfirmar").addEventListener("click", () => {
+    if (!selecionado) return;
+    
+    let index = selecionado.dataset.index;
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+
+    if (agendamentos[index].pago) {
+      alert("Esse pagamento já foi confirmado!");
+      return;
+    }
+
+    agendamentos[index].pago = true;
+    localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+    carregarFinanceiro();
+    alert("Pagamento confirmado!");
+  });
+
+  // 🔹 Saudação dinâmica
+  function getSaudacao() {
+    const hora = new Date().getHours();
+    if (hora < 12) return "Bom dia";
+    if (hora < 18) return "Boa tarde";
+    return "Boa noite";
+  }
+
+  // 🔹 Cobrar clientes pendentes (WhatsApp)
+  document.getElementById("btnCobrar").addEventListener("click", () => {
+    let agendamentos = JSON.parse(localStorage.getItem("agendamentos")) || [];
+    let pendentes = agendamentos.filter(ag => !ag.pago);
+
+    if (pendentes.length === 0) {
+      alert("Nenhum cliente pendente para cobrança!");
+      return;
+    }
+
+    let novaJanela = window.open("", "_blank");
+    novaJanela.document.write("<h2>Clientes pendentes</h2><ul style='font-family: Arial; line-height: 1.8;'>");
+
+    pendentes.forEach(ag => {
+      if (ag.telefone) {
+        const saudacao = getSaudacao();
+        let msg = `${saudacao}, ${ag.nome}! 
+Estamos entrando em contato para lembrá-lo do seu pagamento:
+Data: ${ag.data}
+Serviço: ${ag.servico}
+Valor: R$ ${ag.valor || "?"}
+
+Qualquer dúvida, estamos à disposição. Muito obrigado!`;
+
+        let url = `https://wa.me/55${ag.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
+        novaJanela.document.write(`<li><a href="${url}" target="_blank">📲 Cobrar ${ag.nome}</a></li>`);
+      } else {
+        novaJanela.document.write(`<li>⚠️ ${ag.nome} não possui telefone cadastrado</li>`);
+      }
+    });
+
+    novaJanela.document.write("</ul>");
+  });
+
+  // 🔹 Carregar automaticamente
+  window.onload = carregarFinanceiro;
+</script>
+</body>
+</html>
