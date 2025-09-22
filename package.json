@@ -1,5 +1,12 @@
 {
+  "name": "agendamento-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "pg": "^8.16.3"
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   }
 }
